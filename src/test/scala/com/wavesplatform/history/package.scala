@@ -42,7 +42,7 @@ package object history {
   val EmptyFeaturesSettings = FeaturesSettings(autoShutdownOnUnsupportedFeature = false, List.empty)
 
   def domain(settings: WavesSettings, featuresSettings: FeaturesSettings): Domain = {
-    val (history, _, _, stateReader, blockchainUpdater, _) = StorageFactory(settings, featuresSettings).get
+    val (history, _, _, stateReader, blockchainUpdater, _) = StorageFactory(settings, featuresSettings, ???).get
     Domain(history, stateReader, blockchainUpdater)
   }
 
