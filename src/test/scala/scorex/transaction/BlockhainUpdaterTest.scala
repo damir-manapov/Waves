@@ -174,7 +174,7 @@ class BlockhainUpdaterTest extends FunSuite with Matchers with HistoryTest {
   }
 
   test("features votes resets when voting window changes") {
-    val (h, fp, _, _, bu, _) = StorageFactory(WavesSettings, EmptyFeaturesSettings).get
+    val (h, fp, _, _, bu, _) = StorageFactory(WavesSettings, EmptyFeaturesSettings, ???).get
 
     bu.processBlock(genesisBlock)
 
