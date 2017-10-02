@@ -56,8 +56,6 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with StateReader,
 
   def historyReader: NgHistory with DebugNgHistory with FeatureProvider = read { implicit l => new NgHistoryReader(() => ngState(), historyWriter, settings.blockchainSettings.functionalitySettings) }
 
-  private def updatePersistedAndInMemory(): Unit = {}
-
   private def displayFeatures(s: Set[Short]): String = s"FEATURE${if (s.size > 1) "S"} ${s.mkString(", ")} ${if (s.size > 1) "WERE" else "WAS"}"
 
   def featuresAcceptedWithBlock(block: Block): Set[Short] ={
