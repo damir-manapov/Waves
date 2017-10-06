@@ -85,7 +85,7 @@ class RollbackSpecSuite extends FreeSpec with ScalaFutures with IntegrationPatie
     val alias = "test_alias4"
 
     val f = for {
-      startHeight <- Future.traverse(nodes)(_.height).map(_.min)
+      startHeight <- Future.traverse(nodes)(_.height).map(_.max)
       aliasTxId <- nodes.head.createAlias(nodes.head.address, alias, 1.waves).map(_.id)
       _ <- Future.traverse(nodes)(_.waitForTransaction(aliasTxId))
       _ <- Future.traverse(nodes)(_.waitForHeight(startHeight + 1))
