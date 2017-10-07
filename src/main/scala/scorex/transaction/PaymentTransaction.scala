@@ -66,6 +66,10 @@ object PaymentTransaction {
     })
   }
 
+  def createRaw(sender: PrivateKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long): PaymentTransaction = {
+    PaymentTransaction(sender, recipient, amount, fee, timestamp, ByteStr(EllipticCurveImpl.sign(sender, signatureData(sender, recipient, amount, fee, timestamp))))
+  }
+
   def create(sender: PublicKeyAccount,
              recipient: Address,
              amount: Long,

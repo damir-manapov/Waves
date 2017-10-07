@@ -56,6 +56,22 @@ class Wallet private(file: Option[File], password: Array[Char]) extends AutoClos
     } else None
   }
 
+  def addAccount(account: PrivateKeyAccount): Boolean = synchronized {
+
+    val address = account.address
+    val created = if (!accountsCache.contains(address)) {
+      accountsCache += account.address -> account
+      accountsPersistence.put(accountsPersistence.lastKey() + 1, account.seed)
+      database.commit()
+      true
+    } else false
+
+    if (created) {
+      log.info("Added account #" + privateKeyAccounts().size)
+      true
+    } else false
+  }
+
   def deleteAccount(account: PrivateKeyAccount): Boolean = synchronized {
     val res = accountsPersistence.asScala.keys.find { k =>
       if (accountsPersistence.get(k) sameElements account.seed) {

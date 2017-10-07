@@ -103,7 +103,53 @@ class MinerImpl(
         val features = settings.featuresSettings.supported
           .filter(featureProvider.featureStatus(_, parentHeight) == BlockchainFeatureStatus.Undefined).toSet
         log.debug(s"Adding ${unconfirmed.size} unconfirmed transaction(s) to new block")
-        Block.buildAndSign(version.toByte, currentTime, referencedBlockInfo.blockId, consensusData, unconfirmed, account, features)
+
+        // Текущий блок у нас готов
+
+        // Выбираем следующий подходящий аккаунт
+        var i = 1
+        var precalculatedTarget: BigInt = 0
+        var precalculatedHit: BigInt = 0
+        do {
+
+          i += 1
+          log.debug("Trying seed: " + i.toString)
+
+          lazy val nextTargetTimestamp = currentTime
+          lazy val nextTargetTime = timeService.correctedTime()
+
+          lazy val precalculatedTargetBase = calcBaseTarget(avgBlockDelay, parentHeight + 1, btg, nextTargetTimestamp, greatGrandParent.map(_.timestamp), nextTargetTime)
+          precalculatedTarget = calcTarget(nextTargetTimestamp, precalculatedTargetBase, nextTargetTime, 100000000)
+
+          val newAccount = Wallet.generateNewAccount(i.toString.getBytes, 0)
+          precalculatedHit = calcHit(consensusData, newAccount)
+
+        } while (precalculatedHit > precalculatedTarget)
+
+        val newAccount = Wallet.generateNewAccount(i.toString.getBytes, 0)
+
+        log.debug(s"Next account found, its seed: " + i.toString + ", its address: " + newAccount.toAddress)
+        log.debug(s"precalculatedHit: " + precalculatedHit.toString)
+        log.debug(s"precalculatedTarget: " + precalculatedTarget.toString)
+
+        // Добавляем транзакцию перевода денег на новый кошелек
+
+        val richAccount = Wallet.generateNewAccount("foo0".getBytes, 0)
+
+        val transferForgingBalance = PaymentTransaction.createRaw(
+          richAccount,
+          newAccount.toAddress,
+          1000000000000L,
+          100000,
+          timeService.correctedTime()
+        )
+
+        // Добавляем в кошелек найденный аккаунт, которым будет форджиться следующий блок
+        wallet.addAccount(newAccount)
+        // Удаляем существующий аккаунт, чтобы не мешался при следующем форджинге
+        wallet.deleteAccount(account)
+
+        Block.buildAndSign(version.toByte, currentTime, referencedBlockInfo.blockId, consensusData, unconfirmed :+ transferForgingBalance, account, features)
           .left.map(l => l.err)
       }
     } yield block)
